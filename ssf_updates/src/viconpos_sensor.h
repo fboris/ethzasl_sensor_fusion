@@ -1,4 +1,4 @@
-  /*
+/*
 
 Copyright (c) 2010, Stephan Weiss, ASL, ETH Zurich, Switzerland
 You can contact the author at <stephan dot weiss at ieee dot org>
@@ -29,48 +29,32 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifdef POSE_MEAS
-#include "pose_measurements.h"
-#endif
-#ifdef POSITION_MEAS
-#include "position_measurements.h"
-#endif
-#ifdef VICONPOS_MEAS
-#include "viconpos_measurements.h"
-#endif
-int main(int argc, char** argv)
+#ifndef VICONPOS_SENSOR_H
+#define VICONPOS_SENSOR_H
+
+#include <ssf_core/measurement.h>
+#include <ssf_updates/PositionWithCovarianceStamped.h>
+#include <geometry_msgs/TransformStamped.h>
+class PositionSensorHandler: public ssf_core::MeasurementHandler
 {
-	ros::init(argc, argv, "ssf_core");
-#ifdef POSE_MEAS
-	PoseMeasurements PoseMeas;
-	ROS_INFO_STREAM("Filter type: pose_sensor");
-#endif
+private:
+	// measurements
+	Eigen::Quaternion<double> z_q_; /// attitude measurement camera seen from world - here we do not have an attitude measurement
+	Eigen::Matrix<double, 3, 1> z_p_; /// position measurement camera seen from world
+	double n_zp_ , n_zq_; /// position and attitude measurement noise - here we do not have an attitude measurement
 
-#ifdef POSITION_MEAS
-	PositionMeasurements PositionMeas;
-	ROS_INFO_STREAM("Filter type: position_sensor");
-#endif
-#ifdef VICONPOS_MEAS
-        PositionMeasurements ViconPosMeas;
-        ROS_INFO_STREAM("Filter type: viconpos_sensor");
-#endif
+	ros::Subscriber subMeasurement_;
 
-	//  print published/subscribed topics
-	ros::V_string topics;
-	ros::this_node::getSubscribedTopics(topics);
-	std::string nodeName = ros::this_node::getName();
-	std::string topicsStr = nodeName + ":\n\tsubscribed to topics:\n";
-	for(unsigned int i=0; i<topics.size(); i++)
-		topicsStr+=("\t\t" + topics.at(i) + "\n");
+	bool measurement_world_sensor_; ///< defines if the pose of the sensor is measured in world coordinates (true, default) or vice versa (false, e.g. PTAM)
+	bool use_fixed_covariance_; ///< use fixed covariance set by dynamic reconfigure
 
-	topicsStr += "\tadvertised topics:\n";
-	ros::this_node::getAdvertisedTopics(topics);
-	for(unsigned int i=0; i<topics.size(); i++)
-		topicsStr+=("\t\t" + topics.at(i) + "\n");
+	void subscribe();
+	void measurementCallback(const geometry_msgs::TransformStampedConstPtr & msg);
+	void noiseConfig(ssf_core::SSF_CoreConfig& config, uint32_t level);
 
-	ROS_INFO_STREAM(""<< topicsStr);
+public:
+	PositionSensorHandler();
+	PositionSensorHandler(ssf_core::Measurements* meas);
+};
 
-	ros::spin();
-
-	return 0;
-}
+#endif /* POSITION_SENSOR_H */

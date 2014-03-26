@@ -33,3 +33,8 @@ rosbuild_add_executable(position_sensor src/main.cpp src/position_sensor.cpp)
 set_property(TARGET position_sensor PROPERTY COMPILE_DEFINITIONS POSITION_MEAS)
 rosbuild_add_compile_flags(position_sensor "-O3")
 target_link_libraries(position_sensor ssf_core)
+
+rosbuild_add_executable(viconpos_sensor src/main.cpp src/viconpos_sensor.cpp)
+set_property(TARGET viconpos_sensor PROPERTY COMPILE_DEFINITIONS VICONPOS_MEAS)
+rosbuild_add_compile_flags(viconpos_sensor "-O3")
+target_link_libraries(viconpos_sensor ssf_core)
